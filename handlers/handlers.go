@@ -50,6 +50,27 @@ func UpdateSubab(c echo.Context, dbClient *firestore.Client) error {
 	return c.String(http.StatusOK, uid)
 }
 
+func UpdateBab(c echo.Context, dbClient *firestore.Client) error {
+	uid := c.Param("uid")
+	bab := c.FormValue("bab")
+
+	// db := db.CreateClient(c.Request().Context())
+	// defer db.Close()
+
+	progressBab := models.ProgressBab{
+		Selesai: true,
+	}
+
+	doc := dbClient.Collection("users").Doc(uid).Collection("bab").Doc(bab)
+	wr, err := doc.Set(c.Request().Context(), progressBab)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+	fmt.Println(wr)
+	
+	return c.String(http.StatusOK, uid)
+}
+
 func InitProgressUser(c echo.Context, dbClient *firestore.Client) error {
 	uid := c.Get("uid").(string)
 	username := c.FormValue("username")
