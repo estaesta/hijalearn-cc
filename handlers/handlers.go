@@ -71,6 +71,13 @@ func UpdateBab(c echo.Context, dbClient *firestore.Client) error {
 	return c.String(http.StatusOK, uid)
 }
 
+func UpdateProgressUser(c echo.Context, dbClient *firestore.Client) error {
+	if c.FormValue("subab") == "" {
+		return UpdateBab(c, dbClient)
+	}
+	return UpdateSubab(c, dbClient)
+}
+
 func InitProgressUser(c echo.Context, dbClient *firestore.Client) error {
 	uid := c.Get("uid").(string)
 	username := c.FormValue("username")
@@ -83,7 +90,6 @@ func InitProgressUser(c echo.Context, dbClient *firestore.Client) error {
 	// db := db.CreateClient(c.Request().Context())
 	// defer db.Close()
 
-	// doc := db.Doc("progress/" + uid)
 	doc := dbClient.Doc("users/" + uid)
 	wr, err := doc.Create(c.Request().Context(), newProgress)
 	if err != nil {

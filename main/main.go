@@ -18,7 +18,7 @@ func main() {
 	e := echo.New()
 
 	// initialize firebase service and middleware
-    projectID := os.Getenv("PROJECT_ID")
+	projectID := os.Getenv("PROJECT_ID")
 	firebaseService := auth.NewFirebaseService(projectID)
 	firebaseMiddleware := auth.FirebaseMiddleware(firebaseService)
 
@@ -39,7 +39,7 @@ func main() {
 
 	// update user's learning progress
 	updateProgressUser := func(c echo.Context) error {
-		return handlers.UpdateSubab(c, dbClient)
+		return handlers.UpdateProgressUser(c, dbClient)
 	}
 	e.PUT("/progress/", updateProgressUser, firebaseMiddleware)
 
