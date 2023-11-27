@@ -11,8 +11,6 @@ import (
 )
 
 func GetProgressUser(c echo.Context, dbClient *firestore.Client) error {
-	// token := c.Request().Header.Get("Authorization")
-	// uid := auth.Auth(token)
 	uid := c.Get("uid").(string)
 
 	// db := db.CreateClient(c.Request().Context())

@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"log"
+	"os"
 
 	"cloud.google.com/go/firestore"
 )
@@ -10,7 +11,7 @@ import (
 // InitFirestoreClient initializes a Firestore client.
 func CreateClient(ctx context.Context) *firestore.Client {
 	// Sets your Google Cloud Platform project ID.
-	projectID := "festive-antenna-402105"
+	projectID := os.Getenv("PROJECT_ID")
 
 	client, err := firestore.NewClient(ctx, projectID)
 	if err != nil {
