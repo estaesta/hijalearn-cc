@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 
 	"cloud.google.com/go/firestore"
 	"github.com/estaesta/hijalearn/models"
@@ -13,19 +13,29 @@ import (
 
 func GetProgressUser(c echo.Context, dbClient *firestore.Client) error {
 	uid := c.Get("uid").(string)
-	fmt.Println(uid)
 
 	// db := db.CreateClient(c.Request().Context())
 	// defer db.Close()
 
-	doc := dbClient.Doc("users/" + uid)
+	// doc := dbClient.Doc("users/" + uid)
+	//
+	// docSnap, err := doc.Get(c.Request().Context())
+	// if err != nil {
+	// 	return c.JSON(http.StatusInternalServerError, err)
+	// }
+	// dataMap := docSnap.Data()
+	// fmt.Println(dataMap)
 
-	docSnap, err := doc.Get(c.Request().Context())
+	iter := dbClient.Collection("users").Doc(uid).Collection("bab")
+	iterSnap, err := iter.Documents(c.Request().Context()).GetAll()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	dataMap := docSnap.Data()
-	fmt.Println(dataMap)
+
+	dataMap := make(map[string]interface{})
+	for _, doc := range iterSnap {
+		dataMap[doc.Ref.ID] = doc.Data()
+	}
 
 	return c.JSON(http.StatusOK, dataMap)
 }
@@ -38,17 +48,21 @@ func UpdateSubab(c echo.Context, dbClient *firestore.Client) error {
         // db := db.CreateClient(c.Request().Context())
         // defer db.Close()
 
-	progressSubab := models.ProgressSubab{
-		Selesai: true,
+	// progressSubab := models.ProgressSubab{
+	// 	Selesai: true,
+	// }
+	progressSubab := map[string]interface{}{
+		"subab": map[string]interface{}{
+			subab: true,
+		},
 	}
 
-	doc := dbClient.Collection("users").Doc(uid).Collection("bab").Doc(bab).Collection("subab").Doc(subab)
-	wr, err := doc.Set(c.Request().Context(), progressSubab)
+	doc := dbClient.Collection("users").Doc(uid).Collection("bab").Doc(bab)
+	wr, err := doc.Set(c.Request().Context(), progressSubab, firestore.MergeAll)
 	if err != nil {
 		c.Logger().Error(err)
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	fmt.Println(wr)
         
 	return c.String(http.StatusOK, uid)
 }
@@ -60,7 +74,12 @@ func UpdateBab(c echo.Context, dbClient *firestore.Client) error {
 	// db := db.CreateClient(c.Request().Context())
 	// defer db.Close()
 
+	babInt, err := strconv.Atoi(bab)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
 	progressBab := models.ProgressBab{
+		Bab:    babInt,
 		Selesai: true,
 	}
 
@@ -70,15 +89,14 @@ func UpdateBab(c echo.Context, dbClient *firestore.Client) error {
 		c.Logger().Error(err)
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	fmt.Println(wr)
 	
 	return c.String(http.StatusOK, uid)
 }
 
 func UpdateProgressUser(c echo.Context, dbClient *firestore.Client) error {
-	if c.FormValue("subab") == "" {
-		return UpdateBab(c, dbClient)
-	}
+	// if c.FormValue("subab") == "" {
+	// 	return UpdateBab(c, dbClient)
+	// }
 	return UpdateSubab(c, dbClient)
 }
 
@@ -97,10 +115,9 @@ func InitProgressUser(c echo.Context, dbClient *firestore.Client) error {
 	doc := dbClient.Doc("users/" + uid)
 	wr, err := doc.Create(c.Request().Context(), newProgress)
 	if err != nil {
-		fmt.Println(err)
+		c.Logger().Error(err)
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	fmt.Println(wr)
 
 	newProgress.Id = ""
 	return c.JSON(http.StatusOK, newProgress)
@@ -133,7 +150,6 @@ func Predict(c echo.Context, url string) error {
 	}
 
 	result := string(body)
-	fmt.Println(result)
 
 	if result == label {
 		return c.JSON(http.StatusOK, "benar")
