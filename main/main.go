@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"net/http"
-	"os"
 
 	"cloud.google.com/go/firestore"
 	"github.com/estaesta/hijalearn/auth"
@@ -18,7 +17,8 @@ func main() {
 	e := echo.New()
 
 	// initialize firebase service and middleware
-	projectID := os.Getenv("PROJECT_ID")
+	// projectID := os.Getenv("PROJECT_ID")
+	projectID := "festive-antenna-402105"
 	firebaseService := auth.NewFirebaseService(projectID)
 	firebaseMiddleware := auth.FirebaseMiddleware(firebaseService)
 

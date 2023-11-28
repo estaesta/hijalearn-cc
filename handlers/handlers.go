@@ -13,11 +13,12 @@ import (
 
 func GetProgressUser(c echo.Context, dbClient *firestore.Client) error {
 	uid := c.Get("uid").(string)
+	fmt.Println(uid)
 
 	// db := db.CreateClient(c.Request().Context())
 	// defer db.Close()
 
-	doc := dbClient.Doc("progress/" + uid)
+	doc := dbClient.Doc("users/" + uid)
 
 	docSnap, err := doc.Get(c.Request().Context())
 	if err != nil {
@@ -30,7 +31,7 @@ func GetProgressUser(c echo.Context, dbClient *firestore.Client) error {
 }
 
 func UpdateSubab(c echo.Context, dbClient *firestore.Client) error {
-	uid := c.Param("uid")
+	uid := c.Get("uid").(string)
         bab := c.FormValue("bab")
         subab := c.FormValue("subab")
 
@@ -44,6 +45,7 @@ func UpdateSubab(c echo.Context, dbClient *firestore.Client) error {
 	doc := dbClient.Collection("users").Doc(uid).Collection("bab").Doc(bab).Collection("subab").Doc(subab)
 	wr, err := doc.Set(c.Request().Context(), progressSubab)
 	if err != nil {
+		c.Logger().Error(err)
 		return c.JSON(http.StatusInternalServerError, err)
 	}
 	fmt.Println(wr)
@@ -52,7 +54,7 @@ func UpdateSubab(c echo.Context, dbClient *firestore.Client) error {
 }
 
 func UpdateBab(c echo.Context, dbClient *firestore.Client) error {
-	uid := c.Param("uid")
+	uid := c.Get("uid").(string)
 	bab := c.FormValue("bab")
 
 	// db := db.CreateClient(c.Request().Context())
@@ -65,6 +67,7 @@ func UpdateBab(c echo.Context, dbClient *firestore.Client) error {
 	doc := dbClient.Collection("users").Doc(uid).Collection("bab").Doc(bab)
 	wr, err := doc.Set(c.Request().Context(), progressBab)
 	if err != nil {
+		c.Logger().Error(err)
 		return c.JSON(http.StatusInternalServerError, err)
 	}
 	fmt.Println(wr)
