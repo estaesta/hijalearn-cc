@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 
 	"cloud.google.com/go/firestore"
@@ -100,4 +101,39 @@ func InitProgressUser(c echo.Context, dbClient *firestore.Client) error {
 
 	newProgress.Id = ""
 	return c.JSON(http.StatusOK, newProgress)
+}
+
+func Predict(c echo.Context, url string) error {
+	audioFile, err := c.FormFile("audio")
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+	src, err := audioFile.Open()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+	defer src.Close()
+
+	label := c.FormValue("label")
+
+	// send to flask server
+	resp, err := http.Post(url, audioFile.Header.Get("Content-Type"), src)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+	defer resp.Body.Close()
+
+	// get response
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	result := string(body)
+	fmt.Println(result)
+
+	if result == label {
+		return c.JSON(http.StatusOK, "benar")
+	}
+	return c.JSON(http.StatusOK, "salah")
 }
