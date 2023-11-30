@@ -76,3 +76,35 @@ func (f *FirebaseService) VerifyIDToken(ctx context.Context, idToken string) (st
 
 	return uid, nil
 }
+
+func (f *FirebaseService) GetUser(ctx context.Context, uid string) (*auth.UserRecord, error) {
+	user, err := f.app.GetUser(ctx, uid)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (f *FirebaseService) CreateUser(ctx context.Context, email, password, username string) (*auth.UserRecord, error) {
+	params := (&auth.UserToCreate{}).
+		Email(email).
+		Password(password).
+		DisplayName(username)
+
+	user, err := f.app.CreateUser(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (f *FirebaseService) CreateCustomToken(ctx context.Context, uid string) (string, error) {
+	token, err := f.app.CustomToken(ctx, uid)
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+}

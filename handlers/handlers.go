@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"cloud.google.com/go/firestore"
+	"github.com/estaesta/hijalearn/auth"
 	"github.com/estaesta/hijalearn/models"
 
 	"github.com/labstack/echo/v4"
@@ -12,18 +13,6 @@ import (
 
 func GetProgressUser(c echo.Context, dbClient *firestore.Client) error {
 	uid := c.Get("uid").(string)
-
-	// db := db.CreateClient(c.Request().Context())
-	// defer db.Close()
-
-	// doc := dbClient.Doc("users/" + uid)
-	//
-	// docSnap, err := doc.Get(c.Request().Context())
-	// if err != nil {
-	// 	return c.JSON(http.StatusInternalServerError, err)
-	// }
-	// dataMap := docSnap.Data()
-	// fmt.Println(dataMap)
 
 	iter := dbClient.Collection("users").Doc(uid).Collection("bab")
 	iterSnap, err := iter.Documents(c.Request().Context()).GetAll()
@@ -46,9 +35,6 @@ func UpdateSubab(c echo.Context, dbClient *firestore.Client) error {
 	bab := c.FormValue("bab")
 	subab := c.FormValue("subab")
 
-	// db := db.CreateClient(c.Request().Context())
-	// defer db.Close()
-
 	progressSubab := map[string]interface{}{
 		"subab": map[string]interface{}{
 			subab: true,
@@ -69,13 +55,6 @@ func UpdateBab(c echo.Context, dbClient *firestore.Client) error {
 	uid := c.Get("uid").(string)
 	bab := c.FormValue("bab")
 
-	// db := db.CreateClient(c.Request().Context())
-	// defer db.Close()
-
-	// babInt, err := strconv.Atoi(bab)
-	// if err != nil {
-	// 	return c.JSON(http.StatusInternalServerError, err)
-	// }
 	progressBab := map[string]interface{}{
 		"selesai": true,
 	}
@@ -105,9 +84,6 @@ func InitProgressUser(c echo.Context, dbClient *firestore.Client) error {
 		Id:       uid,
 		Username: username,
 	}
-
-	// db := db.CreateClient(c.Request().Context())
-	// defer db.Close()
 
 	doc := dbClient.Doc("users/" + uid)
 	_, err := doc.Create(c.Request().Context(), newProgress)
@@ -152,4 +128,21 @@ func Predict(c echo.Context, url string) error {
 		return c.JSON(http.StatusOK, "benar")
 	}
 	return c.JSON(http.StatusOK, "salah")
+}
+
+func Register(c echo.Context, firebaseService *auth.FirebaseService) error {
+	email := c.FormValue("email")
+	password := c.FormValue("password")
+	username := c.FormValue("username")
+
+	// create user in firebase auth
+	user, err := firebaseService.CreateUser(c.Request().Context(), email, password, username)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+	c.Logger().Info(user)
+
+	// auto login
+	// token, err := firebaseService.CreateCustomToken(c.Request().Context(), user.UID)
+	return c.JSON(http.StatusOK, "User created successfully")
 }

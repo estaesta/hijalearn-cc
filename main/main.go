@@ -38,19 +38,25 @@ func main() {
 	getProgressUser := func(c echo.Context) error {
 		return handlers.GetProgressUser(c, dbClient)
 	}
-	e.GET("/progress/", getProgressUser, firebaseMiddleware)
+	e.GET("/api/v1/progress/", getProgressUser, firebaseMiddleware)
 
 	// update user's learning progress
 	updateProgressUser := func(c echo.Context) error {
 		return handlers.UpdateProgressUser(c, dbClient)
 	}
-	e.PUT("/progress/", updateProgressUser, firebaseMiddleware)
+	e.PUT("/api/v1/progress/", updateProgressUser, firebaseMiddleware)
 
 	// initialize user's learning progress
-	initProgressUser := func(c echo.Context) error {
-		return handlers.InitProgressUser(c, dbClient)
+	// initProgressUser := func(c echo.Context) error {
+	// 	return handlers.InitProgressUser(c, dbClient)
+	// }
+	// e.POST("/api/v1/progress", initProgressUser, firebaseMiddleware)
+
+	// register
+	register := func(c echo.Context) error {
+		return handlers.Register(c, firebaseService)
 	}
-	e.POST("/progress/", initProgressUser, firebaseMiddleware)
+	e.POST("/api/v1/register", register)
 
 	e.Logger.Fatal(e.Start(":8080"))
 }
