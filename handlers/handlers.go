@@ -146,3 +146,17 @@ func Register(c echo.Context, firebaseService *auth.FirebaseService) error {
 	// token, err := firebaseService.CreateCustomToken(c.Request().Context(), user.UID)
 	return c.JSON(http.StatusOK, "User created successfully")
 }
+
+func UpdateProfile(c echo.Context, firebaseService *auth.FirebaseService) error {
+	// uid := c.Get("uid").(string)
+	// username := c.FormValue("username")
+	// profilePicture := c.FormFile("profile_picture")
+
+	// TODO; check if profile picture is already exist
+	// if exist, delete the old one
+
+	// TODO: upload profile picture to bucket
+	// set profile picture url to firebase
+
+	return c.JSON(http.StatusOK, "Profile updated successfully")
+}
