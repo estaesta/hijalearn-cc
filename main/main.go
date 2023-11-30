@@ -9,6 +9,7 @@ import (
 	"github.com/estaesta/hijalearn/db"
 	"github.com/estaesta/hijalearn/handlers"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 var dbClient *firestore.Client
@@ -25,6 +26,8 @@ func main() {
 	// initialize firestore client
 	dbClient = db.CreateClient(context.Background())
 	defer dbClient.Close()
+
+	e.Use(middleware.Logger())
 
 	// routes
 	e.GET("/", func(c echo.Context) error {
