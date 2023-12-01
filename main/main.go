@@ -38,13 +38,13 @@ func main() {
 	getProgressUser := func(c echo.Context) error {
 		return handlers.GetProgressUser(c, dbClient)
 	}
-	e.GET("/api/v1/progress/", getProgressUser, firebaseMiddleware)
+	e.GET("/api/v1/progress", getProgressUser, firebaseMiddleware)
 
 	// update user's learning progress
 	updateProgressUser := func(c echo.Context) error {
 		return handlers.UpdateProgressUser(c, dbClient)
 	}
-	e.PUT("/api/v1/progress/", updateProgressUser, firebaseMiddleware)
+	e.PUT("/api/v1/progress", updateProgressUser, firebaseMiddleware)
 
 	// initialize user's learning progress
 	// initProgressUser := func(c echo.Context) error {
