@@ -24,7 +24,7 @@ Do not include subab to update the bab progress (all subab completed).
 
 Header
 
-Authorization: Bearer <token>
+Authorization: Bearer \<token\>
 
 Body
 
@@ -53,20 +53,20 @@ Get the user's progress.
 
 Header
 
-Authorization: Bearer <token>
+Authorization: Bearer \<token\>
 
 Response
 
 ```json
 {
-	"bab": {
-		"1": {
-			"selesai": true,
-			"subab": {
-				"1": true,
-				"2": true
-			}
-		}
-	}
+  "bab": {
+    "1": {
+      "selesai": true,
+      "subab": {
+        "1": true,
+        "2": true
+      }
+    }
+  }
 }
 ```
