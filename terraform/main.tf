@@ -17,6 +17,10 @@ provider "google" {
 #   force_destroy = true
 # }
 
+resource "time_sleep" "wait_60_seconds" {
+  create_duration = "60s"
+}
+
 // firestore native mode
 resource "google_project_service" "firestore" {
   project = var.project-id
@@ -26,7 +30,7 @@ resource "google_project_service" "firestore" {
 }
 
 resource "google_firestore_database" "database" {
-  name        = "hijalearn-db"
+  name        = "(default)"
   project     = var.project-id
   location_id = "asia-southeast2"
   type        = "FIRESTORE_NATIVE"
