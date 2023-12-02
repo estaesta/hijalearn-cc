@@ -39,13 +39,10 @@ Register a new user.
 
 Body
 
-```json
-{
-  "username": "username",
-  "password": "password",
-  "email": "email",
-}
-```
+multipart/form-data
+- email: email
+- password: password
+- username: username
 
 GET /api/v1/progress
 ---
