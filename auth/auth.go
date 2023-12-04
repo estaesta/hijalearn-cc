@@ -86,6 +86,15 @@ func (f *FirebaseService) GetUser(ctx context.Context, uid string) (*auth.UserRe
 	return user, nil
 }
 
+func (f *FirebaseService) GetUserByEmail(ctx context.Context, email string) (*auth.UserRecord, error) {
+	user, err := f.app.GetUserByEmail(ctx, email)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
 func (f *FirebaseService) CreateUser(ctx context.Context, email, password, username string) (*auth.UserRecord, error) {
 	params := (&auth.UserToCreate{}).
 		Email(email).

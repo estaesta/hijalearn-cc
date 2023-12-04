@@ -135,6 +135,12 @@ func Register(c echo.Context, firebaseService *auth.FirebaseService) error {
 	password := c.FormValue("password")
 	username := c.FormValue("username")
 
+	// check if email is already exist
+	_, err := firebaseService.GetUserByEmail(c.Request().Context(), email)
+	if err == nil {
+		return c.JSON(http.StatusBadRequest, "Email is already exist")
+	}
+
 	// create user in firebase auth
 	user, err := firebaseService.CreateUser(c.Request().Context(), email, password, username)
 	if err != nil {
