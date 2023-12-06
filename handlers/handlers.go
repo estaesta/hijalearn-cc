@@ -148,6 +148,12 @@ func Register(c echo.Context, firebaseService *auth.FirebaseService) error {
 	}
 	c.Logger().Info(user)
 
+	// init progress user
+	// _, err = dbClient.Collection("users").Doc(user.UID).Create(c.Request().Context(), models.ProgressUser{
+	// 	Id:       user.UID,
+	// 	Username: username,
+	// })
+
 	// auto login
 	// token, err := firebaseService.CreateCustomToken(c.Request().Context(), user.UID)
 	return c.JSON(http.StatusOK, "User created successfully")
