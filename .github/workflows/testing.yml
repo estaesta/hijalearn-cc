@@ -13,6 +13,7 @@ env:
   PROJECT_ID: festive-antenna-402105
   # GAR_LOCATION: YOUR_GAR_LOCATION # TODO: update Artifact Registry location
   SERVICE: hijalearn-be-test
+  CONTAINER_DIR: hijalearn-be
   REGION: asia-southeast2
 
 jobs:
@@ -51,8 +52,8 @@ jobs:
 
       - name: Build and Push Container
         run: |-
-          docker build -t "gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ github.sha }}" -t "gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:latest" ./
-          docker push -a "gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}"
+          docker build -t "gcr.io/${{ env.PROJECT_ID }}/${{ env.CONTAINER_DIR }}:${{ github.sha }}" -t "gcr.io/${{ env.PROJECT_ID }}/${{ env.CONTAINER_DIR }}:latest" ./
+          docker push -a "gcr.io/${{ env.PROJECT_ID }}/${{ env.CONTAINER_DIR }}"
 
       # END - Docker auth and build
 
@@ -63,7 +64,7 @@ jobs:
           service: ${{ env.SERVICE }}
           region: ${{ env.REGION }}
           # NOTE: If using a pre-built image, update the image name here
-          image: gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ github.sha }}
+          image: gcr.io/${{ env.PROJECT_ID }}/${{ env.CONTAINER_DIR }}:${{ github.sha }}
 
       # If required, use the Cloud Run url output in later steps
       - name: Show Output
