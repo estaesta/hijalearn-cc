@@ -70,6 +70,9 @@ func UpdateBab(c echo.Context, dbClient *firestore.Client) error {
 }
 
 func UpdateProgressUser(c echo.Context, dbClient *firestore.Client) error {
+	if c.FormValue("bab") == "" && c.FormValue("subab") == "" {
+		return c.JSON(http.StatusBadRequest, "bab or subab is required")
+	}
 	if c.FormValue("subab") == "" {
 		return UpdateBab(c, dbClient)
 	}
