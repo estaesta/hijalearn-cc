@@ -47,14 +47,14 @@ func main() {
 	e.PUT("/api/v1/progress", updateProgressUser, firebaseMiddleware)
 
 	// initialize user's learning progress
-	// initProgressUser := func(c echo.Context) error {
-	// 	return handlers.InitProgressUser(c, dbClient)
-	// }
-	// e.POST("/api/v1/progress", initProgressUser, firebaseMiddleware)
+	initProgressUser := func(c echo.Context) error {
+		return handlers.InitProgressUser(c, dbClient)
+	}
+	e.POST("/api/v1/progress", initProgressUser, firebaseMiddleware)
 
 	// register
 	register := func(c echo.Context) error {
-		return handlers.Register(c, firebaseService)
+		return handlers.Register(c, firebaseService, dbClient)
 	}
 	e.POST("/api/v1/register", register)
 
