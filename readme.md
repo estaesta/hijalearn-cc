@@ -1,9 +1,8 @@
-API (by assumption)
+API
 
 TODO
 ---
 - [ ] Update users profile
-- [ ] Deploy
 
 Installation
 ---
@@ -16,23 +15,6 @@ $ docker build -t hijalearn-cc .
 $ docker run -d -p 8080:8080 hijalearn-cc
 ```
 
-PUT /api/v1/progress
----
-Update the user's progress.
-Include subab to update the subab progress.
-Do not include subab to update the bab progress (all subab completed).
-
-Header
-
-Authorization: Bearer \<token\>
-
-Body
-
-multipart/form-data
-- bab: bab number
-- subab: subab number
-
-
 POST /api/v1/register
 ---
 Register a new user.
@@ -44,26 +26,19 @@ multipart/form-data
 - password: password
 - username: username
 
-GET /api/v1/progress
+
+POST /api/v1/prediction
 ---
-Get the user's progress.
+Make a prediction. The backend service will also handle the update progress of the user.
 
-Header
+header:
 
-Authorization: Bearer \<token\>
+Authorization: Bearer <token>
 
-Response
+Body
 
-```json
-{
-  "bab": {
-    "1": {
-      "selesai": true,
-      "subab": {
-        "1": true,
-        "2": true
-      }
-    }
-  }
-}
-```
+multipart/form-data
+- audio: audio file
+- caraEja: label hijaiyah
+~~ - moduleId: module id (1-5)~~ ( gk perlu, dihandle backend, ambil dari last module)
+- done: boolean (true/false)
