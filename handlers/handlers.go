@@ -292,12 +292,17 @@ func sendRequest(c echo.Context,filename string, url string) (string, error) {
 }
 
 func Predict(c echo.Context, dbClient *firestore.Client, url string) error {
-	// modulId
-	// done
-	// caraEja
-	// audio
+	
+	if c.FormValue("caraEja") == "" || c.FormValue("done") == "" {
+		return c.JSON(http.StatusBadRequest, "caraEja or done is required")
+	}
+
+	// get audio file
 	audioFile, err := c.FormFile("audio")
 	if err != nil {
+		if err == http.ErrMissingFile {
+			return c.JSON(http.StatusBadRequest, "audio is required")
+		}
 		return c.JSON(http.StatusInternalServerError, err)
 	}
 
