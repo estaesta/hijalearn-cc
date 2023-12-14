@@ -31,7 +31,7 @@ func main() {
 
 	// routes
 	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello, World!")
+		return c.String(http.StatusOK, "API is running")
 	})
 
 	// get user's learning progress
@@ -41,10 +41,10 @@ func main() {
 	e.GET("/api/v1/progress", getProgressUser, firebaseMiddleware)
 
 	// update user's learning progress
-	updateProgressUser := func(c echo.Context) error {
-		return handlers.UpdateProgressUser(c, dbClient)
-	}
-	e.PUT("/api/v1/progress", updateProgressUser, firebaseMiddleware)
+	// updateProgressUser := func(c echo.Context) error {
+	// 	return handlers.UpdateProgressUser(c, dbClient)
+	// }
+	// e.PUT("/api/v1/progress", updateProgressUser, firebaseMiddleware)
 
 	// initialize user's learning progress
 	initProgressUser := func(c echo.Context) error {
@@ -57,6 +57,12 @@ func main() {
 		return handlers.Register(c, firebaseService, dbClient)
 	}
 	e.POST("/api/v1/register", register)
+
+	// prediction
+	predict := func(c echo.Context) error {
+		return handlers.Predict(c, dbClient, "https://hijalearn-ml-e6mqsjvzxq-et.a.run.app/predict")
+	}
+	e.POST("/api/v1/prediction", predict, firebaseMiddleware)
 
 	e.Logger.Fatal(e.Start(":8080"))
 }

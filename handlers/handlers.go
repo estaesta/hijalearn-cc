@@ -1,8 +1,14 @@
 package handlers
 
 import (
+	"bytes"
+	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
+	"os"
+	"path/filepath"
+	"sort"
 	"strconv"
 
 	"cloud.google.com/go/firestore"
@@ -41,9 +47,19 @@ func GetProgressUser(c echo.Context, dbClient *firestore.Client) error {
 	dataArray := []interface{}{}
 	// add bab id int16
 	for babId, babData := range dataMap["module"].(map[string]interface{}) {
-		babData.(map[string]interface{})["module_id"] = babId
+		babIdInt, err := strconv.Atoi(babId)
+		if err != nil {
+			c.Logger().Error(err)
+			return c.JSON(http.StatusInternalServerError, err)
+		}
+
+		babData.(map[string]interface{})["module_id"] = babIdInt
 		dataArray = append(dataArray, babData)
 	}
+	// sort by module_id
+	sort.Slice(dataArray, func(i, j int) bool {
+		return dataArray[i].(map[string]interface{})["module_id"].(int) < dataArray[j].(map[string]interface{})["module_id"].(int)
+	})
 
 	dataMap["module"] = dataArray
 
@@ -75,13 +91,6 @@ func UpdateSubabV2(c echo.Context, dbClient *firestore.Client) error {
 	uid := c.Get("uid").(string)
 	bab := c.FormValue("bab")
 	subab := c.FormValue("subab")
-
-	// v2 change the structure into
-	// bab: {
-	// "1": {
-	// 	"subModuleDone": 1,
-	//  "totalSubModule": 3
-	// }
 
 	// convert subab to int
 	subabInt, err := strconv.Atoi(subab)
@@ -182,11 +191,12 @@ func InitProgressUser(c echo.Context, dbClient *firestore.Client) error {
 	// }
 
 	newProgressUser := map[string]interface{}{
-		"last_module": 0,
+		"last_module": 1,
 		"module": map[string]interface{}{
-			"1": newModule(28),
+			"1": newModule(30),
 			"2": newModule(28),
 			"3": newModule(28),
+			"4": newModule(28),
 		},
 	}
 
@@ -216,38 +226,185 @@ func InitProgressUser(c echo.Context, dbClient *firestore.Client) error {
 	return nil
 }
 
-func Predict(c echo.Context, url string) error {
+func createTempFile(file *multipart.FileHeader) (string, error) {
+	src, err := file.Open()
+	if err != nil {
+		return "", err
+	}
+	defer src.Close()
+
+	dst, err := os.CreateTemp("", fmt.Sprintf("%s-*%s", file.Filename, ".wav"))
+	if err != nil {
+		return "", err
+	}
+	defer dst.Close()
+
+	if _, err = io.Copy(dst, src); err != nil {
+		return "", err
+	}
+
+	return dst.Name(), nil
+}
+
+func sendRequest(c echo.Context,filename string, url string) (string, error) {
+	form := new(bytes.Buffer)
+	writer := multipart.NewWriter(form)
+	fw, err := writer.CreateFormFile("file", filepath.Base(filename))
+	if err != nil {
+		c.Logger().Error(err)
+		return "", err
+	}
+	fd, err := os.Open(filename)
+	if err != nil {
+		c.Logger().Error(err)
+		return "", err
+	}
+	defer fd.Close()
+	_, err = io.Copy(fw, fd)
+	if err != nil {
+		c.Logger().Error(err)
+		return "", err
+	}
+
+	writer.Close()
+
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", url, form)
+	if err != nil {
+		c.Logger().Error(err)
+		return "", err
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	resp, err := client.Do(req)
+	if err != nil {
+		c.Logger().Error(err)
+		return "", err
+	}
+	defer resp.Body.Close()
+	bodyText, err := io.ReadAll(resp.Body)
+	if err != nil {
+		c.Logger().Error(err)
+		return "", err
+	}
+	// fmt.Printf("%s\n", bodyText)
+
+	return string(bodyText), nil
+}
+
+func Predict(c echo.Context, dbClient *firestore.Client, url string) error {
+	// modulId
+	// done
+	// caraEja
+	// audio
 	audioFile, err := c.FormFile("audio")
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	src, err := audioFile.Open()
+
+	label := c.FormValue("caraEja")
+	done := c.FormValue("done")
+	// moduleId := c.FormValue("moduleId")
+
+	// create temp file
+	filename, err := createTempFile(audioFile)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	defer src.Close()
+	defer os.Remove(filename)
 
-	label := c.FormValue("label")
-
-	// send to flask server
-	resp, err := http.Post(url, audioFile.Header.Get("Content-Type"), src)
+	// send request
+	result, err := sendRequest(c, filename, url)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	defer resp.Body.Close()
+	fmt.Println(result)
+	fmt.Println(label)
 
-	// get response
-	body, err := io.ReadAll(resp.Body)
+	if result != label {
+		return c.JSON(http.StatusOK, "Wrong answer")
+	}
+
+	if done == "true" {
+		// do not update progress
+		return c.JSON(http.StatusOK, "Correct answer")
+	}
+
+	// check progress user
+	uid := c.Get("uid").(string)
+	fmt.Println(uid)
+	doc := dbClient.Collection("users").Doc(uid)
+	docSnap, err := doc.Get(c.Request().Context())
 	if err != nil {
+		c.Logger().Error(err)
 		return c.JSON(http.StatusInternalServerError, err)
 	}
 
-	result := string(body)
+	// dataMap := docSnap.Data()
+	// dataModule := dataMap["module"].(map[string]interface{})
+	// fmt.Println(moduleId)
+	// currentModule := dataModule[moduleId].(map[string]interface{})
+	// fmt.Println(currentModule)
 
-	if result == label {
-		return c.JSON(http.StatusOK, "benar")
+	// dataModule = last module
+	lastModule := docSnap.Data()["last_module"].(int64)
+	lastModuleStr := strconv.Itoa(int(lastModule))
+	dataModule := docSnap.Data()["module"].(map[string]interface{})
+	currentModule := dataModule[lastModuleStr].(map[string]interface{})
+
+	moduleId := lastModuleStr
+
+
+	totalSubModule := currentModule["totalSubModule"].(int64)
+	subModuleDone := currentModule["subModuleDone"].(int64)
+	// check if this module is actually completed
+	if currentModule["completed"].(bool) {
+		return c.JSON(http.StatusOK, "Correct answer")
 	}
-	return c.JSON(http.StatusOK, "salah")
+	// check if this is last subModule
+	subModuleCompleted := totalSubModule == subModuleDone+1
+	fmt.Println(subModuleCompleted)
+	fmt.Println(totalSubModule)
+
+	// update progress user
+	progressModule := map[string]interface{}{
+		"subModuleDone": subModuleDone + 1,
+		"completed":     subModuleCompleted,
+	}
+
+	// init progressUser
+	var progressUser map[string]interface{}
+	// moduleIdInt, err := strconv.Atoi(moduleId)
+	if err != nil {
+		c.Logger().Error(err)
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	// if this is last subModule, update last_module
+	if subModuleCompleted {
+		progressUser = map[string]interface{}{
+			// "last_module": moduleIdInt + 1,
+			"last_module": lastModule + 1,
+			"module": map[string]interface{}{
+				moduleId: progressModule,
+			},
+		}
+	} else {
+		progressUser = map[string]interface{}{
+			"module": map[string]interface{}{
+				moduleId: progressModule,
+			},
+		}
+	}
+
+	fmt.Println(progressUser)
+
+	_, err = doc.Set(c.Request().Context(), progressUser, firestore.MergeAll)
+	if err != nil {
+		c.Logger().Error(err)
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, "Correct answer")
 }
 
 func Register(c echo.Context, firebaseService *auth.FirebaseService, dbClient *firestore.Client) error {
