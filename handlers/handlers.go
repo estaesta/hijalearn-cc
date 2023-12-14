@@ -246,7 +246,7 @@ func createTempFile(file *multipart.FileHeader) (string, error) {
 	return dst.Name(), nil
 }
 
-func sendRequest(c echo.Context,filename string, url string) (string, error) {
+func sendRequest(c echo.Context,filename string, url string, model string) (string, error) {
 	form := new(bytes.Buffer)
 	writer := multipart.NewWriter(form)
 	fw, err := writer.CreateFormFile("file", filepath.Base(filename))
@@ -265,6 +265,13 @@ func sendRequest(c echo.Context,filename string, url string) (string, error) {
 		c.Logger().Error(err)
 		return "", err
 	}
+
+	formField, err := writer.CreateFormField("model")
+	if err != nil {
+		c.Logger().Error(err)
+		return "", err
+	}
+	formField.Write([]byte(model))
 
 	writer.Close()
 
@@ -308,7 +315,7 @@ func Predict(c echo.Context, dbClient *firestore.Client, url string) error {
 
 	label := c.FormValue("caraEja")
 	done := c.FormValue("done")
-	// moduleId := c.FormValue("moduleId")
+	moduleId := c.FormValue("moduleId")
 
 	// create temp file
 	filename, err := createTempFile(audioFile)
@@ -318,7 +325,7 @@ func Predict(c echo.Context, dbClient *firestore.Client, url string) error {
 	defer os.Remove(filename)
 
 	// send request
-	result, err := sendRequest(c, filename, url)
+	result, err := sendRequest(c, filename, url, moduleId)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
