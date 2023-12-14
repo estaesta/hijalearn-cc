@@ -42,3 +42,58 @@ multipart/form-data
 - caraEja: label hijaiyah
 - ~~moduleId: module id (1-5)~~ ( gk perlu, dihandle backend, ambil dari last module)
 - done: boolean (true/false)
+
+Response
+```
+"Correct answer"
+```
+
+GET /api/v1/progress
+---
+Get user progress
+
+header:
+
+Authorization: Bearer <token>
+
+Response
+```
+{
+	"last_module": 2,
+	"module": [
+		{
+			"completed": true,
+			"module_id": 1,
+			"subModuleDone": 30,
+			"totalSubModule": 30
+		},
+		{
+			"completed": false,
+			"module_id": 2,
+			"subModuleDone": 1,
+			"totalSubModule": 28
+		},
+		{
+			"completed": false,
+			"module_id": 3,
+			"subModuleDone": 0,
+			"totalSubModule": 28
+		},
+		{
+			"completed": false,
+			"module_id": 4,
+			"subModuleDone": 0,
+			"totalSubModule": 28
+		}
+	]
+}
+```
+
+POST /api/v1/progress
+---
+Initialize user progress (if needed). Already handled by the backend service when user register.
+
+header:
+
+Authorization: Bearer <token>
+
