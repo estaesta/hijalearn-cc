@@ -40,6 +40,12 @@ func main() {
 	}
 	e.GET("/api/v1/progress", getProgressUser, firebaseMiddleware)
 
+	// get single module user's learning progress
+	getProgressUserModule := func(c echo.Context) error {
+		return handlers.GetProgressUserModule(c, dbClient)
+	}
+	e.GET("/api/v1/progress/:moduleId", getProgressUserModule, firebaseMiddleware)
+
 	// update user's learning progress
 	// updateProgressUser := func(c echo.Context) error {
 	// 	return handlers.UpdateProgressUser(c, dbClient)

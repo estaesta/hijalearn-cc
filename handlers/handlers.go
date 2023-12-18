@@ -52,7 +52,7 @@ func GetProgressUser(c echo.Context, dbClient *firestore.Client) error {
 	return c.JSON(http.StatusOK, dataMap)
 }
 
-func GetModuleProgressUser(c echo.Context, dbClient *firestore.Client) error {
+func GetProgressUserModule(c echo.Context, dbClient *firestore.Client) error {
 	uid := c.Get("uid").(string)
 	moduleId := c.Param("moduleId")
 
@@ -64,11 +64,11 @@ func GetModuleProgressUser(c echo.Context, dbClient *firestore.Client) error {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
 
-	dataMap := docSnap.Data()
-	dataModule := dataMap["module"].(map[string]interface{})
-	dataModuleId := dataModule[moduleId].(map[string]interface{})
+	dataModule := docSnap.Data()["module"].(map[string]interface{})
+	currentModule := dataModule[moduleId].(map[string]interface{})
 
-	return c.JSON(http.StatusOK, dataModuleId)
+	// return json of this module data 
+	return c.JSON(http.StatusOK, currentModule)
 }
 
 func UpdateSubab(c echo.Context, dbClient *firestore.Client) error {
