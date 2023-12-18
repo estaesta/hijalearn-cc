@@ -20,20 +20,6 @@ import (
 func GetProgressUser(c echo.Context, dbClient *firestore.Client) error {
 	uid := c.Get("uid").(string)
 
-	// v1
-	// iter := dbClient.Collection("users").Doc(uid).Collection("bab")
-	// iterSnap, err := iter.Documents(c.Request().Context()).GetAll()
-	// if err != nil {
-	// 	return c.JSON(http.StatusInternalServerError, err)
-	// }
-	//
-	// dataMap := map[string]interface{}{
-	// 	"bab": map[string]interface{}{},
-	// }
-	// for _, doc := range iterSnap {
-	// 	dataMap["bab"].(map[string]interface{})[doc.Ref.ID] = doc.Data()
-	// }
-
 	// v2
 	doc := dbClient.Collection("users").Doc(uid)
 	docSnap, err := doc.Get(c.Request().Context())
@@ -64,6 +50,25 @@ func GetProgressUser(c echo.Context, dbClient *firestore.Client) error {
 	dataMap["module"] = dataArray
 
 	return c.JSON(http.StatusOK, dataMap)
+}
+
+func GetModuleProgressUser(c echo.Context, dbClient *firestore.Client) error {
+	uid := c.Get("uid").(string)
+	moduleId := c.Param("moduleId")
+
+	// v2
+	doc := dbClient.Collection("users").Doc(uid)
+	docSnap, err := doc.Get(c.Request().Context())
+	if err != nil {
+		c.Logger().Error(err)
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	dataMap := docSnap.Data()
+	dataModule := dataMap["module"].(map[string]interface{})
+	dataModuleId := dataModule[moduleId].(map[string]interface{})
+
+	return c.JSON(http.StatusOK, dataModuleId)
 }
 
 func UpdateSubab(c echo.Context, dbClient *firestore.Client) error {
@@ -172,24 +177,6 @@ func newModule(totalSubModuleInt int) map[string]interface{} {
 func InitProgressUser(c echo.Context, dbClient *firestore.Client) error {
 	uid := c.Get("uid").(string)
 
-	// doc := dbClient.Collection("users").Doc(uid).Collection("bab").Doc("1")
-	// batch.Set(doc, map[string]interface{}{
-	// 	"totalSubModule": 28,
-	// 	"subModuleDone":  0,
-	// }, firestore.MergeAll)
-	//
-	// doc = dbClient.Collection("users").Doc(uid).Collection("bab").Doc("2")
-	// batch.Set(doc, map[string]interface{}{
-	// 	"totalSubModule": 28,
-	// 	"subModuleDone":  0,
-	// }, firestore.MergeAll)
-	//
-	// _, err = batch.Commit(c.Request().Context())
-	// if err != nil {
-	// 	c.Logger().Error(err)
-	// 	return c.JSON(http.StatusInternalServerError, err)
-	// }
-
 	newProgressUser := map[string]interface{}{
 		"last_module": 1,
 		"module": map[string]interface{}{
@@ -199,22 +186,6 @@ func InitProgressUser(c echo.Context, dbClient *firestore.Client) error {
 			"4": newModule(28),
 		},
 	}
-
-	// newProgressUser := map[string]interface{}{
-	// 	"last_module": 0,
-	// 	"module": []interface{}{
-	// 		map[string]interface{}{
-	// 			"totalSubModule": totalSubModuleInt,
-	// 			"subModuleDone":  0,
-	// 			"id":             1,
-	// 		},
-	// 		map[string]interface{}{
-	// 			"totalSubModule": totalSubModuleInt,
-	// 			"subModuleDone":  0,
-	// 			"id":             2,
-	// 		},
-	// 	},
-	// }
 
 	doc := dbClient.Collection("users").Doc(uid)
 	_, err := doc.Set(c.Request().Context(), newProgressUser, firestore.MergeAll)
@@ -329,8 +300,8 @@ func Predict(c echo.Context, dbClient *firestore.Client, url string) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	fmt.Println(result)
-	fmt.Println(label)
+	// fmt.Println(result)
+	// fmt.Println(label)
 
 	if result != label {
 		return c.JSON(http.StatusOK, "Wrong answer")
@@ -363,7 +334,7 @@ func Predict(c echo.Context, dbClient *firestore.Client, url string) error {
 	dataModule := docSnap.Data()["module"].(map[string]interface{})
 	currentModule := dataModule[lastModuleStr].(map[string]interface{})
 
-	moduleId := lastModuleStr
+	// moduleId := lastModuleStr
 
 
 	totalSubModule := currentModule["totalSubModule"].(int64)
@@ -433,20 +404,23 @@ func Register(c echo.Context, firebaseService *auth.FirebaseService, dbClient *f
 	// create user in firebase auth
 	user, err := firebaseService.CreateUser(c.Request().Context(), email, password, username)
 	if err != nil {
+		c.Logger().Error(err)
 		return c.JSON(http.StatusInternalServerError, err)
 	}
 	c.Logger().Info(user)
 
-	// init progress user
-	// _, err = dbClient.Collection("users").Doc(user.UID).Create(c.Request().Context(), models.ProgressUser{
-	// 	Id:       user.UID,
-	// 	Username: username,
-	// })
-	// InitProgressUser(c, firebaseService.DbClient)
-	err = InitProgressUser(c, dbClient)
+	// get uid
+	uid := user.UID
 
-	// auto login
-	// token, err := firebaseService.CreateCustomToken(c.Request().Context(), user.UID)
+	// set uid to context
+	c.Set("uid", uid)
+
+	err = InitProgressUser(c, dbClient)
+	if err != nil {
+		c.Logger().Error(err)
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
 	return c.JSON(http.StatusOK, "User created successfully")
 }
 
