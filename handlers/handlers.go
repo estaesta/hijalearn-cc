@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -10,6 +11,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
+	"strings"
 
 	"cloud.google.com/go/firestore"
 	"github.com/estaesta/hijalearn/auth"
@@ -287,6 +289,9 @@ func Predict(c echo.Context, dbClient *firestore.Client, url string) error {
 	label := c.FormValue("caraEja")
 	done := c.FormValue("done")
 	moduleId := c.FormValue("moduleId")
+	if moduleId == "" {
+		moduleId = "0"
+	}
 
 	// create temp file
 	filename, err := createTempFile(audioFile)
@@ -302,14 +307,50 @@ func Predict(c echo.Context, dbClient *firestore.Client, url string) error {
 	}
 	// fmt.Println(result)
 	// fmt.Println(label)
+	// result format
+	// {
+	// "prediction": "A",
+	// "probability": "99.99998807907104"
+	// }
 
-	if result != label {
+	// if result != label {
+	// 	return c.JSON(http.StatusOK, "Wrong answer")
+	// }
+
+	type Result struct {
+		Prediction  string `json:"prediction"`
+		Probability string `json:"probability"`
+	}
+
+	var resultStruct Result
+	err = json.Unmarshal([]byte(result), &resultStruct)
+	if err != nil {
+		c.Logger().Error(err)
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	probability, err := strconv.ParseFloat(resultStruct.Probability, 64)
+	if err != nil {
+		c.Logger().Error(err)
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	fmt.Println(resultStruct.Prediction)
+	fmt.Println(label)
+
+	// case insensitive
+	if !strings.EqualFold(resultStruct.Prediction, label) || probability < 0.6 {
 		return c.JSON(http.StatusOK, "Wrong answer")
 	}
 
 	if done == "true" {
 		// do not update progress
-		return c.JSON(http.StatusOK, "Correct answer")
+		response := map[string]interface{}{
+			"correct": true,
+			"probability": probability,
+			"message": "Correct answer",
+		}
+		return c.JSON(http.StatusOK, response)
 	}
 
 	// check progress user
@@ -341,7 +382,12 @@ func Predict(c echo.Context, dbClient *firestore.Client, url string) error {
 	subModuleDone := currentModule["subModuleDone"].(int64)
 	// check if this module is actually completed
 	if currentModule["completed"].(bool) {
-		return c.JSON(http.StatusOK, "Correct answer")
+		response := map[string]interface{}{
+			"correct": true,
+			"probability": probability,
+			"message": "Correct answer",
+		}
+		return c.JSON(http.StatusOK, response)
 	}
 	// check if this is last subModule
 	subModuleCompleted := totalSubModule == subModuleDone+1
@@ -368,13 +414,13 @@ func Predict(c echo.Context, dbClient *firestore.Client, url string) error {
 			// "last_module": moduleIdInt + 1,
 			"last_module": lastModule + 1,
 			"module": map[string]interface{}{
-				moduleId: progressModule,
+				lastModuleStr: progressModule,
 			},
 		}
 	} else {
 		progressUser = map[string]interface{}{
 			"module": map[string]interface{}{
-				moduleId: progressModule,
+				lastModuleStr: progressModule,
 			},
 		}
 	}
@@ -387,7 +433,12 @@ func Predict(c echo.Context, dbClient *firestore.Client, url string) error {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
 
-	return c.JSON(http.StatusOK, "Correct answer")
+	response := map[string]interface{}{
+		"correct": true,
+		"probability": probability,
+		"message": "Correct answer",
+	}
+	return c.JSON(http.StatusOK, response)
 }
 
 func Register(c echo.Context, firebaseService *auth.FirebaseService, dbClient *firestore.Client) error {

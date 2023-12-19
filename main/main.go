@@ -22,6 +22,8 @@ func main() {
 	projectID := "festive-antenna-402105"
 	firebaseService := auth.NewFirebaseService(projectID)
 	firebaseMiddleware := auth.FirebaseMiddleware(firebaseService)
+	mlEndpoint := "https://hijalearn-ml-e6mqsjvzxq-et.a.run.app/predict"
+	// mlEndpoint := "http://localhost:5000/predict"
 
 	// initialize firestore client
 	dbClient = db.CreateClient(context.Background())
@@ -66,7 +68,7 @@ func main() {
 
 	// prediction
 	predict := func(c echo.Context) error {
-		return handlers.Predict(c, dbClient, "https://hijalearn-ml-e6mqsjvzxq-et.a.run.app/predict")
+		return handlers.Predict(c, dbClient, mlEndpoint)
 	}
 	e.POST("/api/v1/prediction", predict, firebaseMiddleware)
 
