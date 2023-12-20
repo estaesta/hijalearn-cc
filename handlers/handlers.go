@@ -348,15 +348,15 @@ func Predict(c echo.Context, dbClient *firestore.Client, url string) error {
 		return c.JSON(http.StatusOK, response)
 	}
 
-	if done == "true" {
-		// do not update progress
-		response := map[string]interface{}{
-			"correct": true,
-			"probability": probability,
-			"message": "Correct answer",
-		}
-		return c.JSON(http.StatusOK, response)
-	}
+	// if done == "true" {
+	// 	// do not update progress
+	// 	response := map[string]interface{}{
+	// 		"correct": true,
+	// 		"probability": probability,
+	// 		"message": "Correct answer",
+	// 	}
+	// 	return c.JSON(http.StatusOK, response)
+	// }
 
 	// check progress user
 	uid := c.Get("uid").(string)
@@ -375,34 +375,31 @@ func Predict(c echo.Context, dbClient *firestore.Client, url string) error {
 	// fmt.Println(currentModule)
 
 	// dataModule = last module
-	lastModule := docSnap.Data()["last_module"].(int64)
-	lastModuleStr := strconv.Itoa(int(lastModule))
+	// lastModule := docSnap.Data()["last_module"].(int64)
+	// lastModuleStr := strconv.Itoa(int(lastModule))
 	dataModule := docSnap.Data()["module"].(map[string]interface{})
-	currentModule := dataModule[lastModuleStr].(map[string]interface{})
+	currentModule := dataModule[moduleId].(map[string]interface{})
 
 	// moduleId := lastModuleStr
 
 
 	totalSubModule := currentModule["totalSubModule"].(int64)
 	subModuleDone := currentModule["subModuleDone"].(int64)
-	// check if this module is actually completed
-	if currentModule["completed"].(bool) {
-		response := map[string]interface{}{
-			"correct": true,
-			"probability": probability,
-			"message": "Correct answer",
-		}
-		return c.JSON(http.StatusOK, response)
-	}
 	// check if this is last subModule
 	subModuleCompleted := totalSubModule == subModuleDone+1
 	fmt.Println(subModuleCompleted)
 	fmt.Println(totalSubModule)
 
-	// update progress user
-	progressModule := map[string]interface{}{
-		"subModuleDone": subModuleDone + 1,
-		"completed":     subModuleCompleted,
+	var progressModule map[string]interface{}
+
+	// do not update progress if this module is completed
+	if currentModule["completed"].(bool) || done == "true" {
+		progressModule = map[string]interface{}{}
+	} else {
+		progressModule = map[string]interface{}{
+			"subModuleDone": subModuleDone + 1,
+			"completed":     subModuleCompleted,
+		}
 	}
 
 	// init progressUser
@@ -413,21 +410,18 @@ func Predict(c echo.Context, dbClient *firestore.Client, url string) error {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
 
-	// if this is last subModule, update last_module
-	if subModuleCompleted {
-		progressUser = map[string]interface{}{
-			// "last_module": moduleIdInt + 1,
-			"last_module": lastModule + 1,
-			"module": map[string]interface{}{
-				lastModuleStr: progressModule,
-			},
-		}
-	} else {
-		progressUser = map[string]interface{}{
-			"module": map[string]interface{}{
-				lastModuleStr: progressModule,
-			},
-		}
+	moduleIdInt, err := strconv.Atoi(moduleId)
+	if err != nil {
+		c.Logger().Error(err)
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	// update the lastModule to this module
+	progressUser = map[string]interface{}{
+		"last_module": moduleIdInt,
+		"module": map[string]interface{}{
+			moduleId: progressModule,
+		},
 	}
 
 	fmt.Println(progressUser)
