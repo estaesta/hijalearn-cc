@@ -340,7 +340,12 @@ func Predict(c echo.Context, dbClient *firestore.Client, url string) error {
 
 	// case insensitive
 	if !strings.EqualFold(resultStruct.Prediction, label) || probability < 0.6 {
-		return c.JSON(http.StatusOK, "Wrong answer")
+		response := map[string]interface{}{
+			"correct": false,
+			"message": "Wrong answer",
+			"probability": 0,
+		}
+		return c.JSON(http.StatusOK, response)
 	}
 
 	if done == "true" {
