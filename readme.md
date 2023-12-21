@@ -6,13 +6,25 @@ TODO
 
 Installation
 ---
+### Dockerized
 Pre-requisite: Docker
 
 ```bash
 $ git clone
 $ cd hijalearn-cc
+$ go build -o bin main
 $ docker build -t hijalearn-cc .
 $ docker run -d -p 8080:8080 hijalearn-cc
+```
+
+### Manual
+Pre-requisite: Go 1.13
+
+```bash
+$ git clone
+$ cd hijalearn-cc
+$ go build -o bin main
+$ ./bin
 ```
 
 POST /api/v1/register
@@ -45,7 +57,11 @@ multipart/form-data
 
 Response
 ```
-"Correct answer"
+{
+	"correct": true,
+	"message": "Correct answer",
+	"probability": 92.73654818534851
+}
 ```
 
 GET /api/v1/progress
