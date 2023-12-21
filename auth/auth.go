@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"mime/multipart"
 
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/auth"
@@ -116,4 +117,44 @@ func (f *FirebaseService) CreateCustomToken(ctx context.Context, uid string) (st
 	}
 
 	return token, nil
+}
+
+func (f *FirebaseService) UpdateUserProfile(ctx context.Context, uid, profilePictureURL string) error {
+	user, err := f.app.GetUser(ctx, uid)
+	if err != nil {
+		return err
+	}
+
+	params := (&auth.UserToUpdate{}).
+		PhotoURL(profilePictureURL)
+
+	_, err = f.app.UpdateUser(ctx, user.UID, params)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// bagian yang bawah ini masih bingung
+func (f *FirebaseService) UploadProfilePicture(uid string, profilePicture *multipart.FileHeader) (string, error) {
+	// TODO: Implement function to upload profile picture to storage bucket
+	// Return the URL of the uploaded profile picture
+	// Example:
+	imageURL, err := uploadToStorageBucket(uid, profilePicture)
+	if err != nil {
+		return "", err
+	}
+	return imageURL, nil
+}
+
+// ini juga masih bingung
+func (f *FirebaseService) UpdateUserProfilePicture(uid, profilePictureURL string) error {
+	// TODO: Implement function to update profile picture URL in Firebase
+	// Example:
+	//err := updateUserProfileURL(uid, profilePictureURL)
+	//if err != nil {
+	//	return err
+	//}
+	return nil
 }

@@ -69,7 +69,7 @@ func GetProgressUserModule(c echo.Context, dbClient *firestore.Client) error {
 	dataModule := docSnap.Data()["module"].(map[string]interface{})
 	currentModule := dataModule[moduleId].(map[string]interface{})
 
-	// return json of this module data 
+	// return json of this module data
 	return c.JSON(http.StatusOK, currentModule)
 }
 
@@ -219,7 +219,7 @@ func createTempFile(file *multipart.FileHeader) (string, error) {
 	return dst.Name(), nil
 }
 
-func sendRequest(c echo.Context,filename string, url string, model string) (string, error) {
+func sendRequest(c echo.Context, filename string, url string, model string) (string, error) {
 	form := new(bytes.Buffer)
 	writer := multipart.NewWriter(form)
 	fw, err := writer.CreateFormFile("file", filepath.Base(filename))
@@ -272,7 +272,7 @@ func sendRequest(c echo.Context,filename string, url string, model string) (stri
 }
 
 func Predict(c echo.Context, dbClient *firestore.Client, url string) error {
-	
+
 	if c.FormValue("caraEja") == "" || c.FormValue("done") == "" {
 		return c.JSON(http.StatusBadRequest, "caraEja or done is required")
 	}
@@ -341,8 +341,8 @@ func Predict(c echo.Context, dbClient *firestore.Client, url string) error {
 	// case insensitive
 	if !strings.EqualFold(resultStruct.Prediction, label) || probability < 0.6 {
 		response := map[string]interface{}{
-			"correct": false,
-			"message": "Wrong answer",
+			"correct":     false,
+			"message":     "Wrong answer",
 			"probability": 0,
 		}
 		return c.JSON(http.StatusOK, response)
@@ -381,7 +381,6 @@ func Predict(c echo.Context, dbClient *firestore.Client, url string) error {
 	currentModule := dataModule[moduleId].(map[string]interface{})
 
 	// moduleId := lastModuleStr
-
 
 	totalSubModule := currentModule["totalSubModule"].(int64)
 	subModuleDone := currentModule["subModuleDone"].(int64)
@@ -433,9 +432,9 @@ func Predict(c echo.Context, dbClient *firestore.Client, url string) error {
 	}
 
 	response := map[string]interface{}{
-		"correct": true,
+		"correct":     true,
 		"probability": probability,
-		"message": "Correct answer",
+		"message":     "Correct answer",
 	}
 	return c.JSON(http.StatusOK, response)
 }
@@ -474,16 +473,50 @@ func Register(c echo.Context, firebaseService *auth.FirebaseService, dbClient *f
 	return c.JSON(http.StatusOK, "User created successfully")
 }
 
+//func UpdateProfile(c echo.Context, firebaseService *auth.FirebaseService) error {
+// uid := c.Get("uid").(string)
+// username := c.FormValue("username")
+// profilePicture := c.FormFile("profile_picture")
+
+// TODO; check if profile picture is already exist
+// if exist, delete the old one
+
+// TODO: upload profile picture to bucket
+// set profile picture url to firebase
+
+//	return c.JSON(http.StatusOK, "Profile updated successfully")
+//}
+
 func UpdateProfile(c echo.Context, firebaseService *auth.FirebaseService) error {
-	// uid := c.Get("uid").(string)
-	// username := c.FormValue("username")
-	// profilePicture := c.FormFile("profile_picture")
+	uid := c.Get("uid").(string)
+	username := c.FormValue("username")
+	profilePicture, err := c.FormFile("profile_picture")
 
-	// TODO; check if profile picture is already exist
-	// if exist, delete the old one
+	if err != nil {
+		c.Logger().Error(err)
+		return c.JSON(http.StatusInternalServerError, err)
+	}
 
-	// TODO: upload profile picture to bucket
-	// set profile picture url to firebase
+	// TODO: Check if profile picture already exists and delete the old one
+
+	// TODO: Resize the profile picture if needed
+
+	// Upload profile picture to storage bucket
+	// Assuming you have a function to upload to the storage bucket in the FirebaseService
+
+	// Get the URL of the uploaded profile picture
+	profilePictureURL, err := firebaseService.UploadProfilePicture(uid, profilePicture)
+	if err != nil {
+		c.Logger().Error(err)
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	// Set profile picture URL to Firebase
+	err = firebaseService.UpdateUserProfilePicture(uid, profilePictureURL)
+	if err != nil {
+		c.Logger().Error(err)
+		return c.JSON(http.StatusInternalServerError, err)
+	}
 
 	return c.JSON(http.StatusOK, "Profile updated successfully")
 }
