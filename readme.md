@@ -6,16 +6,6 @@ TODO
 
 Installation
 ---
-### Dockerized
-Pre-requisite: Docker
-
-```bash
-$ git clone
-$ cd hijalearn-cc
-$ go build -o bin main
-$ docker build -t hijalearn-cc .
-$ docker run -d -p 8080:8080 hijalearn-cc
-```
 
 ### Manual
 Pre-requisite: Go 1.13
@@ -25,6 +15,16 @@ $ git clone
 $ cd hijalearn-cc
 $ go build -o bin main
 $ ./bin
+```
+### Dockerized
+Pre-requisite: Go 1.13, Docker
+
+```bash
+$ git clone
+$ cd hijalearn-cc
+$ go build -o bin main
+$ docker build -t hijalearn-cc .
+$ docker run -d -p 8080:8080 hijalearn-cc
 ```
 
 POST /api/v1/register

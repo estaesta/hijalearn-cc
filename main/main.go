@@ -72,11 +72,11 @@ func main() {
 	}
 	e.POST("/api/v1/prediction", predict, firebaseMiddleware)
 
-	//Update Profile
+	/* //Update Profile
 	updateProfile := func(c echo.Context) error {
 		return handlers.UpdateProfile(c, firebaseService)
 	}
-	e.POST("/api/v1/update_profile", updateProfile, firebaseMiddleware)
+	e.POST("/api/v1/update_profile", updateProfile, firebaseMiddleware) */
 
 	e.Logger.Fatal(e.Start(":8080"))
 }

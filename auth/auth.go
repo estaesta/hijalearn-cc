@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"mime/multipart"
+	// "mime/multipart"
 
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/auth"
@@ -137,16 +137,16 @@ func (f *FirebaseService) UpdateUserProfile(ctx context.Context, uid, profilePic
 }
 
 // bagian yang bawah ini masih bingung
-func (f *FirebaseService) UploadProfilePicture(uid string, profilePicture *multipart.FileHeader) (string, error) {
+// func (f *FirebaseService) UploadProfilePicture(uid string, profilePicture *multipart.FileHeader) (string, error) {
 	// TODO: Implement function to upload profile picture to storage bucket
 	// Return the URL of the uploaded profile picture
 	// Example:
-	imageURL, err := uploadToStorageBucket(uid, profilePicture)
-	if err != nil {
-		return "", err
-	}
-	return imageURL, nil
-}
+	// imageURL, err := uploadToStorageBucket(uid, profilePicture)
+	// if err != nil {
+	// 	return "", err
+	// }
+	// return imageURL, nil
+// }
 
 // ini juga masih bingung
 func (f *FirebaseService) UpdateUserProfilePicture(uid, profilePictureURL string) error {

@@ -487,7 +487,7 @@ func Register(c echo.Context, firebaseService *auth.FirebaseService, dbClient *f
 //	return c.JSON(http.StatusOK, "Profile updated successfully")
 //}
 
-func UpdateProfile(c echo.Context, firebaseService *auth.FirebaseService) error {
+/* func UpdateProfile(c echo.Context, firebaseService *auth.FirebaseService) error {
 	uid := c.Get("uid").(string)
 	username := c.FormValue("username")
 	profilePicture, err := c.FormFile("profile_picture")
@@ -519,4 +519,4 @@ func UpdateProfile(c echo.Context, firebaseService *auth.FirebaseService) error 
 	}
 
 	return c.JSON(http.StatusOK, "Profile updated successfully")
-}
+} */
