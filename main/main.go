@@ -22,7 +22,7 @@ func main() {
 	projectID := "festive-antenna-402105"
 	firebaseService := auth.NewFirebaseService(projectID)
 	firebaseMiddleware := auth.FirebaseMiddleware(firebaseService)
-	mlEndpoint := "https://hijalearn-ml-e6mqsjvzxq-et.a.run.app/predict"
+	mlEndpoint := "https://hijalearn-ml-407033689194.asia-southeast2.run.app/predict"
 	// mlEndpoint := "http://localhost:5000/predict"
 
 	// initialize firestore client
